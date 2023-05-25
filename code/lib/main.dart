@@ -23,13 +23,15 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Denter',
       theme: ThemeData(
-        primarySwatch: Colors.brown,
+        primaryColor: Color(0xFF145248),
+        primaryColorDark: Color(0xFF145248), //
+        primaryColorLight: Color(0xFF145248),
       ),
       home: const AddItem(),
     );
   }
 
-  const MyApp({super.key});
+  const MyApp({Key? key});
 }
 
 class AddItem extends StatefulWidget {
@@ -49,6 +51,7 @@ class _AddItemState extends State<AddItem> {
 
   String imageUrl = '';
   String imageName = '';
+  File? selectedImage;
 
   @override
   Widget build(BuildContext context) {
@@ -63,41 +66,66 @@ class _AddItemState extends State<AddItem> {
           child: Column(children: [
             TextFormField(
               controller: _controllerName,
+              decoration: const InputDecoration(
+                border: UnderlineInputBorder(),
+                labelText: 'Insira o nome',
+              ),
             ),
             TextFormField(
               controller: _controllerTelefone,
+              decoration: const InputDecoration(
+                border: UnderlineInputBorder(),
+                labelText: 'Insira o telefone',
+              ),
             ),
             IconButton(
                 onPressed: () async {
                   signInAnon();
                   ImagePicker imagePicker = ImagePicker();
                   XFile? file =
-                      await imagePicker.pickImage(source: ImageSource.camera);
+                  await imagePicker.pickImage(source: ImageSource.camera);
 
                   if (file == null) return;
                   String uniqueFileName =
-                      DateTime.now().millisecondsSinceEpoch.toString();
+                  DateTime.now().millisecondsSinceEpoch.toString();
 
                   Reference referenceRoot = FirebaseStorage.instance.ref();
                   Reference referenceDirImages =
-                      referenceRoot.child('emergencies');
+                  referenceRoot.child('emergencies');
                   Reference referenceImagetoUpload =
-                      referenceDirImages.child(uniqueFileName);
+                  referenceDirImages.child(uniqueFileName);
                   try {
                     await referenceImagetoUpload.putFile(File(file.path));
 
                     imageUrl = await referenceImagetoUpload.getDownloadURL();
                     imageName = uniqueFileName;
+
+                    setState(() {
+                      selectedImage = File(file.path);
+                    });
                   } catch (error) {}
                 },
                 icon: const Icon(Icons.camera_alt)),
+            if (selectedImage != null)
+              ElevatedButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        content: Image.file(selectedImage!),
+                      );
+                    },
+                  );
+                },
+                child: const Text('Ver Imagem'),
+              ),
             ElevatedButton(
                 onPressed: () async {
                   if (imageUrl.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                       content: Text('POR FAVOR INSIRA UMA IMAGEM'),
                     ));
-
                     return;
                   }
                   final User? user = auth.currentUser;
@@ -118,6 +146,7 @@ class _AddItemState extends State<AddItem> {
                   }
                 },
                 child: const Text('ABRIR CHAMADO'))
+
           ]),
         ),
       ),
