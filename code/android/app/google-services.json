@@ -32,10 +32,10 @@
               "client_type": 3
             },
             {
-              "client_id": "37191378668-sf7rf811n7vhkobcm59n7ur1mopu71gq.apps.googleusercontent.com",
+              "client_id": "37191378668-okbthdhd5a9lvfs7b9gur35s96kg44n4.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "br.com.powerance.denterpatient.code"
+                "bundle_id": "com.example.myApp"
               }
             }
           ]
@@ -68,10 +68,46 @@
               "client_type": 3
             },
             {
-              "client_id": "37191378668-sf7rf811n7vhkobcm59n7ur1mopu71gq.apps.googleusercontent.com",
+              "client_id": "37191378668-okbthdhd5a9lvfs7b9gur35s96kg44n4.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "br.com.powerance.denterpatient.code"
+                "bundle_id": "com.example.myApp"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:37191378668:android:f24513cb8a99d3831f27c9",
+        "android_client_info": {
+          "package_name": "com.example.my_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "37191378668-c41c22sqpbntouadnralihmspuqg38vr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBVLOL-G3xIHVebCg9OU4RattHrvTvIT0U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "37191378668-c41c22sqpbntouadnralihmspuqg38vr.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "37191378668-okbthdhd5a9lvfs7b9gur35s96kg44n4.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.myApp"
               }
             }
           ]

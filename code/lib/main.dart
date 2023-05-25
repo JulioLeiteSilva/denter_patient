@@ -3,8 +3,11 @@ import 'package:code/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+
+final FirebaseAuth auth = FirebaseAuth.instance;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,15 +40,15 @@ class AddItem extends StatefulWidget {
 }
 
 class _AddItemState extends State<AddItem> {
-  TextEditingController _controllerName = TextEditingController();
-  TextEditingController _controllerTelefone = TextEditingController();
+  final _controllerName = TextEditingController();
+  final _controllerTelefone = TextEditingController();
 
   GlobalKey<FormState> key = GlobalKey();
 
-  CollectionReference _reference =
-      FirebaseFirestore.instance.collection('FAZ O L');
+  final _reference = FirebaseFirestore.instance.collection('FAZ O L');
 
   String imageUrl = '';
+  String imageName = '';
 
   @override
   Widget build(BuildContext context) {
@@ -58,14 +61,18 @@ class _AddItemState extends State<AddItem> {
         child: Form(
           key: key,
           child: Column(children: [
-            TextFormField(),
-            TextFormField(),
+            TextFormField(
+              controller: _controllerName,
+            ),
+            TextFormField(
+              controller: _controllerTelefone,
+            ),
             IconButton(
                 onPressed: () async {
+                  signInAnon();
                   ImagePicker imagePicker = ImagePicker();
                   XFile? file =
                       await imagePicker.pickImage(source: ImageSource.camera);
-                  print('${file?.path}');
 
                   if (file == null) return;
                   String uniqueFileName =
@@ -74,13 +81,13 @@ class _AddItemState extends State<AddItem> {
                   Reference referenceRoot = FirebaseStorage.instance.ref();
                   Reference referenceDirImages =
                       referenceRoot.child('emergencies');
-                  // pra fazer oq o julio pediu tem que mexer nessa linha de baixo
                   Reference referenceImagetoUpload =
                       referenceDirImages.child(uniqueFileName);
                   try {
                     await referenceImagetoUpload.putFile(File(file.path));
 
                     imageUrl = await referenceImagetoUpload.getDownloadURL();
+                    imageName = uniqueFileName;
                   } catch (error) {}
                 },
                 icon: const Icon(Icons.camera_alt)),
@@ -93,17 +100,21 @@ class _AddItemState extends State<AddItem> {
 
                     return;
                   }
+                  final User? user = auth.currentUser;
+                  final uid = user!.uid;
                   if (key.currentState!.validate()) {
                     String nameClient = _controllerName.text;
                     String celClient = _controllerTelefone.text;
 
                     Map<String, String> dataToSend = {
+                      'uid': uid,
                       'nome': nameClient,
                       'telefone': celClient,
-                      'foto': imageUrl,
+                      'foto': imageName,
                     };
-
                     _reference.add(dataToSend);
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('pedido enviado com sucesso')));
                   }
                 },
                 child: const Text('ABRIR CHAMADO'))
@@ -112,4 +123,17 @@ class _AddItemState extends State<AddItem> {
       ),
     );
   }
+}
+
+void signInAnon() async {
+  try {
+    final userCredential = await FirebaseAuth.instance.signInAnonymously();
+  } on FirebaseAuthException catch (e) {
+    switch (e.code) {
+      case "operation-not-allowed":
+        break;
+      default:
+    }
+  }
+  FirebaseAuth.instance.idTokenChanges().listen((User? user) {});
 }
