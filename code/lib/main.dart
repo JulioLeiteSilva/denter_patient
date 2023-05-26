@@ -140,6 +140,7 @@ class _AddItemState extends State<AddItem> {
                 icon: const Icon(Icons.camera_alt)),
             if (selectedImage != null)
               ElevatedButton(
+                style: ElevatedButton.styleFrom(primary: Color(0xFF145248)),
                 onPressed: () {
                   showDialog(
                     context: context,
@@ -153,7 +154,7 @@ class _AddItemState extends State<AddItem> {
                 child: const Text('Ver Imagem'),
               ),
             ElevatedButton(
-                style: ElevatedButton.styleFrom(primary: Color(0xFF145248)              ),
+                style: ElevatedButton.styleFrom(primary: Color(0xFF145248)),
                 onPressed: () async {
                   if (imageUrl.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
