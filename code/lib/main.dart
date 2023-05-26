@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Denter',
       theme: ThemeData(
-          primaryColor: Color(0xFF145248),
+          primaryColor: Color(0xFFF30000),
           primaryColorDark: Color(0xFF145248), //
           primaryColorLight: Color(0xFF145248),
       ),
@@ -58,6 +58,7 @@ class _AddItemState extends State<AddItem> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('DENTER'),
+        backgroundColor: Color(0xFF145248),
       ),
       body: Padding(
         padding: const EdgeInsets.all(10),
@@ -120,6 +121,7 @@ class _AddItemState extends State<AddItem> {
                 child: const Text('Ver Imagem'),
               ),
             ElevatedButton(
+                style: ElevatedButton.styleFrom(primary: Color(0xFF145248)              ),
                 onPressed: () async {
                   if (imageUrl.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
