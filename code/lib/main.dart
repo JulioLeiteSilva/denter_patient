@@ -49,7 +49,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Denter',
       theme: ThemeData(
-        primarySwatch: Colors.brown,
+          primaryColor: Color(0xFF145248),
+          primaryColorDark: Color(0xFF145248), //
+          primaryColorLight: Color(0xFF145248),
       ),
       home: const AddItem(),
       builder: EasyLoading.init(),
@@ -81,6 +83,7 @@ class _AddItemState extends State<AddItem> {
 
   String imageUrl = '';
   String imageName = '';
+  File? selectedImage;
 
   @override
   Widget build(BuildContext context) {
@@ -95,9 +98,17 @@ class _AddItemState extends State<AddItem> {
           child: Column(children: [
             TextFormField(
               controller: _controllerName,
+              decoration: const InputDecoration(
+                border: UnderlineInputBorder(),
+                labelText: 'Insira o nome'
+              ),
             ),
             TextFormField(
               controller: _controllerTelefone,
+              decoration: const InputDecoration(
+                border: UnderlineInputBorder(),
+                labelText: 'Insira o telefone',
+              ),
             ),
             IconButton(
                 onPressed: () async {
@@ -120,9 +131,26 @@ class _AddItemState extends State<AddItem> {
 
                     imageUrl = await referenceImagetoUpload.getDownloadURL();
                     imageName = uniqueFileName;
+                    setState(() {
+                      selectedImage = File(file.path);
+                    });
                   } catch (error) {}
                 },
                 icon: const Icon(Icons.camera_alt)),
+            if (selectedImage != null)
+              ElevatedButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        content: Image.file(selectedImage!),
+                      );
+                    },
+                  );
+                },
+                child: const Text('Ver Imagem'),
+              ),
             ElevatedButton(
                 onPressed: () async {
                   if (imageUrl.isEmpty) {
