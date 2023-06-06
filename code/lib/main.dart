@@ -128,6 +128,7 @@ class _AddItemState extends State<AddItem> {
                   Reference referenceImagetoUpload =
                       referenceDirImages.child(uniqueFileName);
                   try {
+                    EasyLoading.show(status: 'loading...');
                     await referenceImagetoUpload.putFile(File(file.path));
 
                     imageUrl = await referenceImagetoUpload.getDownloadURL();
@@ -136,6 +137,9 @@ class _AddItemState extends State<AddItem> {
                       selectedImage = File(file.path);
                     });
                   } catch (error) {}
+                  finally{
+                    EasyLoading.dismiss();
+                  }
                 },
                 icon: const Icon(Icons.camera_alt)),
             if (selectedImage != null)
@@ -148,6 +152,7 @@ class _AddItemState extends State<AddItem> {
                       return AlertDialog(
                         content: Image.file(selectedImage!),
                       );
+
                     },
                   );
                 },
@@ -160,7 +165,7 @@ class _AddItemState extends State<AddItem> {
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                       content: Text('POR FAVOR INSIRA UMA IMAGEM'),
                     ));
-
+                    EasyLoading.dismiss();
                     return;
                   }
                   final User? user = auth.currentUser;
@@ -168,6 +173,7 @@ class _AddItemState extends State<AddItem> {
                   if (key.currentState!.validate()) {
                     String nameClient = _controllerName.text;
                     String celClient = _controllerTelefone.text;
+                    EasyLoading.show(status: 'loading...');
                     final fcmToken =  await FirebaseMessaging.instance.getToken();
                     Map<String, String?> dataToSend = {
                       'uid': uid,
@@ -179,10 +185,15 @@ class _AddItemState extends State<AddItem> {
                     };
                     _reference.add(dataToSend);
 
-                    EasyLoading.show(status: 'loading...');
+                    EasyLoading.dismiss();
+                    EasyLoading.showSuccess("complete");
 
-
-
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EmergencyListScreen(), // Substitua YourNewScreen pela nova tela que você deseja exibir
+                      ),
+                    );
                   }
                 },
                 child: const Text('ABRIR CHAMADO'))
@@ -205,5 +216,56 @@ void signInAnon() async {
   }
   FirebaseAuth.instance.idTokenChanges().listen((User? user) {});
 
+}
 
+class EmergencyListScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Lista de Aceites'),
+        backgroundColor: Color(0xFF145248),
+      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('accept').snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return Center(child: Text('Nenhum item de emergência encontrado.'));
+          }
+          return ListView.builder(
+            itemCount: snapshot.data!.docs.length,
+            itemBuilder: (context, index) {
+              var emergencyData = snapshot.data!.docs[index].data() as Map<String, dynamic>;
+              return ListTile(
+                title: Text(emergencyData['dentist']),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        // Lógica para aceitar o item de emergência
+                      },
+                      style: ElevatedButton.styleFrom(primary: Colors.green),
+                      child: Text('Aceitar'),
+                    ),
+                    SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () {
+                        // Lógica para rejeitar o item de emergência
+                      },
+                      style: ElevatedButton.styleFrom(primary: Colors.red),
+                      child: Text('Rejeitar'),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
 }
