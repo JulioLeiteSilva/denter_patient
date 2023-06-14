@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:code/firebase_options.dart';
@@ -11,13 +10,9 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
+import 'maps.dart'; // Importe o arquivo maps.dart aqui
 
 final FirebaseAuth auth = FirebaseAuth.instance;
-
-
-
-
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,6 +22,7 @@ void main() async {
   configLoading();
   runApp(const MyApp());
 }
+
 void configLoading() {
   EasyLoading.instance
     ..displayDuration = const Duration(milliseconds: 2000)
@@ -44,24 +40,22 @@ void configLoading() {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Denter',
       theme: ThemeData(
-          primaryColor: Color(0xFFF30000),
-          primaryColorDark: Color(0xFF145248), //
-          primaryColorLight: Color(0xFF145248),
+        primaryColor: Color(0xFFF30000),
+        primaryColorDark: Color(0xFF145248), //
+        primaryColorLight: Color(0xFF145248),
       ),
       home: const AddItem(),
       builder: EasyLoading.init(),
     );
   }
-
-
-  const MyApp({super.key});
 }
-
 
 class AddItem extends StatefulWidget {
   const AddItem({Key? key}) : super(key: key);
@@ -71,15 +65,12 @@ class AddItem extends StatefulWidget {
 }
 
 class _AddItemState extends State<AddItem> {
-
   final _controllerName = TextEditingController();
   final _controllerTelefone = TextEditingController();
 
   GlobalKey<FormState> key = GlobalKey();
 
-
   final _reference = FirebaseFirestore.instance.collection('emergency');
-
 
   String imageUrl = '';
   String imageName = '';
@@ -96,75 +87,82 @@ class _AddItemState extends State<AddItem> {
         padding: const EdgeInsets.all(10),
         child: Form(
           key: key,
-          child: Column(children: [
-            TextFormField(
-              controller: _controllerName,
-              decoration: const InputDecoration(
-                border: UnderlineInputBorder(),
-                labelText: 'Insira o nome'
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _controllerName,
+                decoration: const InputDecoration(
+                  border: UnderlineInputBorder(),
+                  labelText: 'Insira o nome',
+                ),
               ),
-            ),
-            TextFormField(
-              controller: _controllerTelefone,
-              decoration: const InputDecoration(
-                border: UnderlineInputBorder(),
-                labelText: 'Insira o telefone',
+              TextFormField(
+                controller: _controllerTelefone,
+                decoration: const InputDecoration(
+                  border: UnderlineInputBorder(),
+                  labelText: 'Insira o telefone',
+                ),
               ),
-            ),
-            IconButton(
+              IconButton(
                 onPressed: () async {
                   signInAnon();
                   ImagePicker imagePicker = ImagePicker();
                   XFile? file =
-                      await imagePicker.pickImage(source: ImageSource.camera);
+                  await imagePicker.pickImage(source: ImageSource.camera);
 
                   if (file == null) return;
                   String uniqueFileName =
-                      DateTime.now().millisecondsSinceEpoch.toString();
+                  DateTime.now().millisecondsSinceEpoch.toString();
 
                   Reference referenceRoot = FirebaseStorage.instance.ref();
                   Reference referenceDirImages =
-                      referenceRoot.child('emergencies');
+                  referenceRoot.child('emergencies');
                   Reference referenceImagetoUpload =
-                      referenceDirImages.child(uniqueFileName);
+                  referenceDirImages.child(uniqueFileName);
                   try {
                     EasyLoading.show(status: 'loading...');
                     await referenceImagetoUpload.putFile(File(file.path));
 
-                    imageUrl = await referenceImagetoUpload.getDownloadURL();
+                    imageUrl =
+                    await referenceImagetoUpload.getDownloadURL();
                     imageName = uniqueFileName;
                     setState(() {
                       selectedImage = File(file.path);
                     });
-                  } catch (error) {}
-                  finally{
+                  } catch (error) {} finally {
                     EasyLoading.dismiss();
                   }
                 },
-                icon: const Icon(Icons.camera_alt)),
-            if (selectedImage != null)
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(primary: Color(0xFF145248)),
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        content: Image.file(selectedImage!),
-                      );
-
-                    },
-                  );
-                },
-                child: const Text('Ver Imagem'),
+                icon: const Icon(Icons.camera_alt),
               ),
-            ElevatedButton(
-                style: ElevatedButton.styleFrom(primary: Color(0xFF145248)),
+              if (selectedImage != null)
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    primary: Color(0xFF145248),
+                  ),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          content: Image.file(selectedImage!),
+                        );
+                      },
+                    );
+                  },
+                  child: const Text('Ver Imagem'),
+                ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  primary: Color(0xFF145248),
+                ),
                 onPressed: () async {
                   if (imageUrl.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('POR FAVOR INSIRA UMA IMAGEM'),
-                    ));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('POR FAVOR INSIRA UMA IMAGEM'),
+                      ),
+                    );
                     EasyLoading.dismiss();
                     return;
                   }
@@ -174,7 +172,8 @@ class _AddItemState extends State<AddItem> {
                     String nameClient = _controllerName.text;
                     String celClient = _controllerTelefone.text;
                     EasyLoading.show(status: 'loading...');
-                    final fcmToken =  await FirebaseMessaging.instance.getToken();
+                    final fcmToken =
+                    await FirebaseMessaging.instance.getToken();
                     Map<String, String?> dataToSend = {
                       'uid': uid,
                       'nome': nameClient,
@@ -191,13 +190,29 @@ class _AddItemState extends State<AddItem> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => EmergencyListScreen(), // Substitua YourNewScreen pela nova tela que você deseja exibir
+                        builder: (context) => SecondScreen(), // Substitua MapsScreen pela nova tela que você deseja exibir
                       ),
                     );
                   }
                 },
-                child: const Text('ABRIR CHAMADO'))
-          ]),
+                child: const Text('ABRIR CHAMADO'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  primary: Color(0xFF145248),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SecondScreen(), // Substitua MapsScreen pela nova tela que você deseja exibir
+                    ),
+                  );
+                },
+                child: const Text('Navegar para Maps'),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -215,7 +230,6 @@ void signInAnon() async {
     }
   }
   FirebaseAuth.instance.idTokenChanges().listen((User? user) {});
-
 }
 
 class EmergencyListScreen extends StatelessWidget {
@@ -238,7 +252,8 @@ class EmergencyListScreen extends StatelessWidget {
           return ListView.builder(
             itemCount: snapshot.data!.docs.length,
             itemBuilder: (context, index) {
-              var emergencyData = snapshot.data!.docs[index].data() as Map<String, dynamic>;
+              var emergencyData =
+              snapshot.data!.docs[index].data() as Map<String, dynamic>;
               return ListTile(
                 title: Text(emergencyData['dentist']),
                 trailing: Row(
