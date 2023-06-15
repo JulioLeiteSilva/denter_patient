@@ -349,9 +349,21 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await Geolocator.requestPermission();
+  await signInAnon();
   runApp(const MyApp());
 }
-
+Future<void> signInAnon() async {
+  try {
+    final userCredential = await FirebaseAuth.instance.signInAnonymously();
+  } on FirebaseAuthException catch (e) {
+    switch (e.code) {
+      case "operation-not-allowed":
+        break;
+      default:
+    }
+  }
+  FirebaseAuth.instance.idTokenChanges().listen((User? user) {});
+}
 void configLoading() {
   EasyLoading.instance
     ..displayDuration = const Duration(milliseconds: 2000)
@@ -435,7 +447,8 @@ class _AddItemState extends State<AddItem> {
                 style: ElevatedButton.styleFrom(
                   primary: Color(0xFF145248),
                 ),
-                onPressed: _takeMultiplePhotos,
+                onPressed:_takeMultiplePhotos,
+
                 child: const Text('Tirar Fotos'),
               ),
               if (selectedImages.isNotEmpty)
@@ -476,11 +489,22 @@ class _AddItemState extends State<AddItem> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          content: Column(
-            children: [
-              for (var image in selectedImages)
-                Image.file(image),
-            ],
+          content: SingleChildScrollView(
+            child: Column(
+              children: [
+                for (var image in selectedImages)
+                  Container(
+                    margin: EdgeInsets.only(bottom: 10.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.black,
+                        width: 1.0,
+                      ),
+                    ),
+                    child: Image.file(image),
+                  ),
+              ],
+            ),
           ),
         );
       },
@@ -509,7 +533,7 @@ class _AddItemState extends State<AddItem> {
         String celClient = _controllerTelefone.text;
         EasyLoading.show(status: 'loading...');
         final fcmToken = await FirebaseMessaging.instance.getToken();
-        List<Map<String, dynamic>> imagesData = [];
+        List<String> imagesData = [];
         for (int i = 0; i < selectedImages.length; i++) {
           String uniqueFileName =
           DateTime.now().millisecondsSinceEpoch.toString();
@@ -526,9 +550,7 @@ class _AddItemState extends State<AddItem> {
 
           imageNames.add(imageName);
 
-          imagesData.add({
-            'photo': imageName
-          });
+          imagesData.add(imageName);
         }
 
         Map<String, dynamic> dataToSend = {
@@ -572,6 +594,7 @@ class _AddItemState extends State<AddItem> {
       );
     }
   }
+
 }
 
 
