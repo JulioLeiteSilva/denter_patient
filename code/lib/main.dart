@@ -585,6 +585,7 @@ class _RatingScreenState extends State<RatingScreen> {
   FirebaseFirestore.instance.collection('emergency');
 
   String _uidDentist = '';
+  String _name = '';
 
   @override
   void initState() {
@@ -646,6 +647,12 @@ class _RatingScreenState extends State<RatingScreen> {
               onPressed: () {
                 // Enviar a avaliação e o comentário para o Firebase
                 _submitRating();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddItem(),
+                  ),
+                );
               },
               child: const Text('Enviar'),
             ),
@@ -686,6 +693,7 @@ class _RatingScreenState extends State<RatingScreen> {
     if (emergencySnapshot.exists) {
       setState(() {
         _uidDentist = emergencySnapshot.get('uidDentist');
+        _name = emergencySnapshot.get('name');
       });
     }
   }
@@ -739,7 +747,7 @@ class _RatingScreenState extends State<RatingScreen> {
     Map<String, String> dataToSend = {
       'classificacao': ratingString,
       'comentario': _comment,
-      'nome': ratingString,
+      'nome': _name,
       'uid': _uidDentist,
     };
 
