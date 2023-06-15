@@ -334,6 +334,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -416,57 +417,154 @@ class _AddItemState extends State<AddItem> {
   List<File> selectedImages = [];
   List<String> imageNames = [];
 
+  bool _isButtonEnabled = false;
+
+
+  void _checkFields() {
+    if (_controllerName.text.isNotEmpty && _controllerTelefone.text.isNotEmpty) {
+      setState(() {
+        _isButtonEnabled = true;
+      });
+    } else {
+      setState(() {
+        _isButtonEnabled = false;
+      });
+    }
+  }
+  @override
+  void initState() {
+    super.initState();
+    _controllerName.addListener(_checkFields);
+    _controllerTelefone.addListener(_checkFields);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('DENTER'),
-        backgroundColor: Color(0xFF145248),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Form(
-          key: key,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _controllerName,
-                decoration: const InputDecoration(
-                  border: UnderlineInputBorder(),
-                  labelText: 'Insira o nome',
-                ),
-              ),
-              TextFormField(
-                controller: _controllerTelefone,
-                decoration: const InputDecoration(
-                  border: UnderlineInputBorder(),
-                  labelText: 'Insira o telefone',
-                ),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  primary: Color(0xFF145248),
-                ),
-                onPressed:_takeMultiplePhotos,
+      appBar:AppBar(
+        toolbarHeight: 30,
+        backgroundColor: const Color(0xFF145248),
+      ) ,
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/sign_in_up.png'),
+            fit: BoxFit.cover,
+          )
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Form(
+            key: key,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextFormField(
+                      controller: _controllerName,
+                      decoration:  InputDecoration(
+                        hintText: 'Informe o nome',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(3.0),
+                        ),
+                      ),
+                    ),
 
-                child: const Text('Tirar Fotos'),
-              ),
-              if (selectedImages.isNotEmpty)
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    primary: Color(0xFF145248),
                   ),
-                  onPressed: _openImageDialog,
-                  child: const Text('Ver Fotos'),
+
                 ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  primary: Color(0xFF145248),
+
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+
+                  child: TextFormField(
+                    keyboardType: TextInputType.phone,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      TelefoneInputFormatter(),
+                    ],
+                    maxLength: 13,
+                    controller: _controllerTelefone,
+                    decoration:  InputDecoration(
+                      hintText: 'Informe o telefone',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(3.0),
+                      ),
+                    ),
+                  ),
                 ),
-                onPressed: _openChamado,
-                child: const Text('Abrir Chamado'),
-              ),
-            ],
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: SizedBox(
+                    width: 150,
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        primary: Color(0xFF145248),
+                      ),
+                      onPressed:_takeMultiplePhotos,
+
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.camera_enhance),
+                          SizedBox(width: 8),
+                          Text("Tirar Foto")
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                if (selectedImages.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: SizedBox(
+                      width: 150,
+                      height: 50,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          primary: Color(0xFF145248),
+                        ),
+                        onPressed: _openImageDialog,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.photo_album),
+                            SizedBox(width: 8),
+                            Text("Ver Fotos")
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: SizedBox(
+                    width: 150,
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        primary: Color(0xFF145248),
+                      ),
+                      onPressed:(_controllerName.text.isEmpty || _controllerTelefone.text.isEmpty) ? null : (){
+                        _openChamado();
+                      },
+
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.flag),
+                          SizedBox(width: 7),
+                          Text("Emergência")
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -597,4 +695,40 @@ class _AddItemState extends State<AddItem> {
 
 }
 
+class TelefoneInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue,
+      TextEditingValue newValue,
+      ) {
+    final int newTextLength = newValue.text.length;
+    int selectionIndex = newValue.selection.end;
 
+    String formattedText = '';
+    int cursorOffset = 0;
+
+    if (newTextLength >= 3) {
+      formattedText += newValue.text.substring(0, 2) + ' ';
+      if (newValue.selection.end >= 2) selectionIndex++;
+    }
+
+    if (newTextLength >= 8) {
+      formattedText += newValue.text.substring(2, 7) + '-';
+      if (newValue.selection.end >= 7) selectionIndex++;
+    }
+
+    if (newTextLength >= 13) {
+      formattedText += newValue.text.substring(7, 13);
+      if (newValue.selection.end >= 13) selectionIndex += 2;
+    } else {
+      formattedText += newValue.text.substring(7);
+    }
+
+    return TextEditingValue(
+      text: formattedText,
+      selection: TextSelection.collapsed(
+        offset: selectionIndex,
+      ),
+    );
+  }
+}

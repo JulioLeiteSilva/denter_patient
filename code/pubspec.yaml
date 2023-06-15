@@ -46,6 +46,7 @@ dependencies:
   google_maps_flutter: ^2.1.1
   geolocator: ^7.1.1
 
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -98,3 +99,5 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+  assets:
+    - assets/images/
