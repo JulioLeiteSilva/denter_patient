@@ -21,13 +21,13 @@ Siga as instruções abaixo para configurar o ambiente de desenvolvimento e exec
 2. Clone este repositório em sua máquina local usando o seguinte comando:
 
    ```bash
-   git clone https://github.com/seu-usuario/solicitante-emergencia-dentaria.git
+   git clone (https://github.com/JulinBruto/denter_patient.git)
    ```
 
 3. Navegue até o diretório do projeto:
 
    ```bash
-   cd solicitante-emergencia-dentaria
+   cd code
    ```
 
 4. Execute o seguinte comando para instalar as dependências do projeto:
