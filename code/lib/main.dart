@@ -528,7 +528,7 @@ class _AddItemState extends State<AddItem> {
                           primary: Color(0xFF145248),
                         ),
                         onPressed: _openImageDialog,
-                        child: Row(
+                        child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.photo_album),
@@ -552,7 +552,7 @@ class _AddItemState extends State<AddItem> {
                         _openChamado();
                       },
 
-                      child: Row(
+                      child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.flag),
@@ -668,7 +668,7 @@ class _AddItemState extends State<AddItem> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => SecondScreen(),
+            builder: (context) => EmergencyListScreen(),
           ),
         );
       }
@@ -728,6 +728,87 @@ class TelefoneInputFormatter extends TextInputFormatter {
       text: formattedText,
       selection: TextSelection.collapsed(
         offset: selectionIndex,
+      ),
+    );
+  }
+}
+
+
+class EmergencyListScreen extends StatelessWidget {
+  String? getCurrentUserID() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      return user.uid;
+    }
+    return null; // Retorna null se o usuário não estiver autenticado
+  }
+  Future<void> updateStatus(String status) async {
+    try {
+      String? currentUserID = getCurrentUserID();
+      var documentRef = FirebaseFirestore.instance.collection('emergency').doc(currentUserID);
+
+      await documentRef.update({'status': status});
+      print('Documento atualizado com sucesso!');
+    } catch (error) {
+      print('Erro ao atualizar o documento: $error');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    String? currentUserID = getCurrentUserID();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Lista de Aceites'),
+        backgroundColor: Color(0xFF145248),
+      ),
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('emergency')
+            .doc(currentUserID)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || !snapshot.data!.exists) {
+            return Center(child: Text('Nenhum item de emergência encontrado.'));
+          }
+          var emergencyData = snapshot.data!.data() as Map<String, dynamic>;
+          var status = emergencyData['status'] as String?;
+
+          if (status != 'draft') {
+            return Center(child: Text('Status não é "draft".'));
+          }
+
+          var acceptDentistList = emergencyData['acceptDentistList'] as Map<String, dynamic>;
+
+          return ListView.builder(
+            itemCount: acceptDentistList.length,
+            itemBuilder: (context, index) {
+              var acceptDentistData = acceptDentistList.values.toList()[index] as Map<String, dynamic>;
+
+              // Utilize os dados individuais do mapa de mapas para exibição na lista
+              return ListTile(
+                title: Text(acceptDentistData['name']),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        updateStatus('inProcess');
+                      },
+                      style: ElevatedButton.styleFrom(primary: Colors.green),
+                      child: Text('Aceitar'),
+                    ),
+                    SizedBox(width: 8),
+                  ],
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
