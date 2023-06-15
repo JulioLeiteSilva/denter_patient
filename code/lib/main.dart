@@ -523,7 +523,12 @@ class EmergencyScreen extends StatelessWidget {
           } else if (status == 'finished') {
             content = ElevatedButton(
               onPressed: () {
-                // Ação quando o botão "Avaliar Atendimento" for pressionado
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RatingScreen(),
+                  ),
+                );
               },
               style: ElevatedButton.styleFrom(primary: Colors.teal[900]),
               child: Text('Avaliar Atendimento'),
@@ -559,5 +564,227 @@ class EmergencyScreen extends StatelessWidget {
         }
       },
     );
+  }
+}
+
+class RatingScreen extends StatefulWidget {
+  const RatingScreen({super.key});
+
+  @override
+  _RatingScreenState createState() => _RatingScreenState();
+}
+
+class _RatingScreenState extends State<RatingScreen> {
+  int _rating = 0;
+  String _comment = '';
+
+  // Referência para as coleções no Firebase
+  final CollectionReference _ratingsCollection =
+  FirebaseFirestore.instance.collection('reviews');
+  final CollectionReference _emergencyCollection =
+  FirebaseFirestore.instance.collection('emergency');
+
+  String _uidDentist = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _getEmergencyData();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Avaliação'),
+        backgroundColor: Color(0xFF145248),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'Avalie o dentista:',
+              style: TextStyle(fontSize: 20),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                buildStar(1),
+                buildStar(2),
+                buildStar(3),
+                buildStar(4),
+                buildStar(5),
+              ],
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Comentário:',
+              style: TextStyle(fontSize: 20),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: 300,
+              child: TextField(
+                onChanged: (value) {
+                  setState(() {
+                    _comment = value;
+                  });
+                },
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'Digite seu comentário',
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF145248),
+              ),
+              onPressed: () {
+                // Enviar a avaliação e o comentário para o Firebase
+                _submitRating();
+              },
+              child: const Text('Enviar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildStar(int rating) {
+    return IconButton(
+      onPressed: () {
+        setState(() {
+          _rating = rating;
+        });
+      },
+      icon: Icon(
+        rating <= _rating ? Icons.star : Icons.star_border,
+        size: 40,
+      ),
+      color: Colors.black,
+    );
+  }
+
+  String? getCurrentUserID() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      return user.uid;
+    }
+    return null; // Retorna null se o usuário não estiver autenticado
+  }
+
+  void _getEmergencyData() async {
+    String? currentUserID = getCurrentUserID();
+    DocumentSnapshot emergencySnapshot =
+    await _emergencyCollection.doc(currentUserID).get();
+
+    if (emergencySnapshot.exists) {
+      setState(() {
+        _uidDentist = emergencySnapshot.get('uidDentist');
+      });
+    }
+  }
+
+  void _submitRating() async {
+    // Verificar se o usuário selecionou uma avaliação
+    if (_rating == 0) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Erro'),
+            content: const Text('Por favor, selecione uma avaliação.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+      return;
+    }
+
+    if (_uidDentist.isEmpty) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Erro'),
+            content: const Text('Não foi possível encontrar o UID do dentista.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+      return;
+    }
+
+    String ratingString = _rating.toString();
+
+    Map<String, String> dataToSend = {
+      'classificacao': ratingString,
+      'comentario': _comment,
+      'nome': ratingString,
+      'uid': _uidDentist,
+    };
+
+    _ratingsCollection.add(dataToSend).then((value) {
+      // Limpar campos após o envio bem-sucedido
+      setState(() {
+        _rating = 0;
+        _comment = '';
+      });
+
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Sucesso'),
+            content: const Text('Avaliação enviada com sucesso!'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    }).catchError((error) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Erro'),
+            content: const Text('Ocorreu um erro ao enviar a avaliação.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    });
   }
 }
